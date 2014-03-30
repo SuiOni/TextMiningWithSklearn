@@ -30,10 +30,10 @@ dataset = fetch_20newsgroups()
 print dataset.filenames.shape
 
 # Explore the dataset
-print sys.getsizeof(dataset)
-print len(dataset.data)
-print dataset.target_names
-print dataset.target
+#print sys.getsizeof(dataset)
+#print len(dataset.data)
+#print dataset.target_names
+#print dataset.target
 
 #pl.figure()
 #pl.hist(dataset.target, np.unique(dataset.target))
@@ -50,9 +50,9 @@ tfidf_transformer = tx.TfidfTransformer()
 data_tfidf = tfidf_transformer.fit_transform(data_count)
 
 # display transformed data info
-print data_tfidf.shape
-print len(count_transformer.vocabulary_)
-print len(count_transformer.stop_words_)
+#print data_tfidf.shape
+#print len(count_transformer.vocabulary_)
+#print len(count_transformer.stop_words_)
 
 
 ##### 
@@ -85,10 +85,30 @@ gs_clf = gs.GridSearchCV(pipeline, parameters, n_jobs=1)
 gs_clf.fit(dataset.data, dataset.target)  # remember to use original data as training
 
 # display grid search result
-print gs_clf.best_params_
-print gs_clf.best_score_
+#print gs_clf.best_params_
+#print gs_clf.best_score_
 
 
+#####
+# Generate classification report
+#X_train, X_test, y_train, y_test = cv.train_test_split(dataset.data, dataset.target, 
+#                                                       test_size=.5)
+# should've done train test split, but the original text file makes the array too large.
+# One solution to this is vectorize it to word count first and then split.
+# in the following setting, it is essentially training error
+X_train, X_test = dataset.data, dataset.data
+y_train, y_test = dataset.target, dataset.target
+y_test_pred = gs_clf.fit(X_train,y_train).predict(X_test)
+print metrics.classification_report(y_test, y_test_pred,
+                                    target_names=dataset.target_names)
+
+# Plot confusion matrix
+cm = metrics.confusion_matrix(dataset.target, y_test_pred)
+pl.matshow(cm, cmap=pl.cm.jet)
+pl.show()
+
+
+##### 
 # Predict the new instance
 dd = ['God is love', 'intel makes the best processor']
 res = gs_clf.predict(dd)
