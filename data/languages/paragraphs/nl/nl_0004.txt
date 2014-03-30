@@ -1,0 +1,1 @@
+Wikipedia is opgezet in de vorm van een Wiki. Voor Wikipedia is een apart programma ontworpen. Tegenwoordig is deze software, MediaWiki, een opensourcesoftware-project dat zeer actief is en ook gebruikt wordt door de andere projecten van de WikiMedia Foundation en door diverse andere projecten en bedrijven.

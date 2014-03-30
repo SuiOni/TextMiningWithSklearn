@@ -1,0 +1,1 @@
+Die MySQL-Datenbank läuft auf mehreren

@@ -1,0 +1,1 @@
+At OOPSLA 2009, Wikimedia CTO and Senior Software Architect Brion Vibber gave a presentation entitled "Community Performance Optimization: Making Your People Run as Smoothly as Your Site"[161] in which he discussed the challenges of handling the contributions from a large community and compared the process to that of software development.
