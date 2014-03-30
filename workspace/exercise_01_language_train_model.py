@@ -13,56 +13,88 @@ import sys
 
 #from sklearn.feature_extraction import CountVectorizer
 from sklearn.datasets import fetch_20newsgroups
-from sklearn.linear_model import Perceptron
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.pipeline import Pipeline
-from sklearn.datasets import load_files
+from sklearn import metrics
+
+import sklearn.naive_bayes as nb
+import sklearn.pipeline as pp
 import sklearn.cross_validation as cv
 import sklearn.feature_extraction.text as tx
-from sklearn import metrics
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pl
 import numpy as np
 import sklearn.grid_search as gs
 
-# The training data folder must be passed as first argument
+###### 
+# fetch data
 dataset = fetch_20newsgroups()
 print dataset.filenames.shape
+
 # Explore the dataset
+print sys.getsizeof(dataset)
+print len(dataset.data)
 print dataset.target_names
+print dataset.target
+
 #pl.figure()
 #pl.hist(dataset.target, np.unique(dataset.target))
 #pl.show()
 
 
-# Transform data
-vectorizer = tx.CountVectorizer()
-vectors = vectorizer.fit_transform(dataset.data)
-print len(vectorizer.vocabulary_)
-print len(vectorizer.stop_words_)
-## Split the dataset in training and test set:
-docs_train, docs_test, y_train, y_test = cv.train_test_split(
-    vectors, dataset.target, test_size=0.5)
+##### 
+# Transform data to count
+count_transformer = tx.CountVectorizer()
+data_count = count_transformer.fit_transform(dataset.data)
 
-# cross validation on the entire dataset
-clf = MultinomialNB(alpha=.1)
-score = cv.cross_val_score(clf, vectors, dataset.target, scoring='f1', cv=5)
+# Obtain tfidf
+tfidf_transformer = tx.TfidfTransformer()
+data_tfidf = tfidf_transformer.fit_transform(data_count)
 
-# TASK: Chain the vectorizer with a linear classifier into a Pipeline
-# instance. Its variable should be named `pipeline`.
-pipeline = Pipeline([
-    ('vec', vectorizer),
-    ('clf', MultinomialNB()),
-])
-
-# Grid search
-parameters = {'vec__max_n':(1,2),
-              'clf__alpha': (1e-2,1e-3),
-              }
-gs_clf = gs.GridSearchCV(clf, parameters, n_jobs=1)
+# display transformed data info
+print data_tfidf.shape
+print len(count_transformer.vocabulary_)
+print len(count_transformer.stop_words_)
 
 
+##### 
+# Choose classifier
+clf = nb.MultinomialNB()
 
+
+##### 
+## Train and Predict, for proof of concept 
+#clf.fit(data_tfidf, dataset.target)
+#test_count = count_transformer.transform(['God is love', 'intel makes the best processor'])
+#test_tfidf = tfidf_transformer.transform(test_count)
+#res = clf.predict(test_tfidf)
+#for i in res: print dataset.target_names[i]
+
+##### 
+# Pipeline the classification procedure
+pipeline = pp.Pipeline([('vect', tx.CountVectorizer()),
+                        ('tfidf', tx.TfidfTransformer()),
+                        ('clf', nb.MultinomialNB()),])
+
+parameters = {
+            'tfidf__use_idf': (True, False),
+            'clf__alpha': (1e-2,1e-3),
+            }
+
+#####
+# Grid search for optimal parameter
+gs_clf = gs.GridSearchCV(pipeline, parameters, n_jobs=1)
+gs_clf.fit(dataset.data, dataset.target)  # remember to use original data as training
+
+# display grid search result
+print gs_clf.best_params_
+print gs_clf.best_score_
+
+
+# Predict the new instance
+dd = ['God is love', 'intel makes the best processor']
+res = gs_clf.predict(dd)
+
+for i in res:
+    print dataset.target_names[i]
 
 
 
