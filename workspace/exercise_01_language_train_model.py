@@ -11,53 +11,58 @@ sequences as 'fingerprints'.
 
 import sys
 
-from sklearn.feature_extraction.text import Vectorizer
+#from sklearn.feature_extraction import CountVectorizer
+from sklearn.datasets import fetch_20newsgroups
 from sklearn.linear_model import Perceptron
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.datasets import load_files
-from sklearn.cross_validation import train_test_split
+import sklearn.cross_validation as cv
+import sklearn.feature_extraction.text as tx
 from sklearn import metrics
-
+import matplotlib.pyplot as plt
+import matplotlib.pylab as pl
+import numpy as np
+import sklearn.grid_search as gs
 
 # The training data folder must be passed as first argument
-languages_data_folder = sys.argv[1]
-dataset = load_files(languages_data_folder)
+dataset = fetch_20newsgroups()
+print dataset.filenames.shape
+# Explore the dataset
+print dataset.target_names
+#pl.figure()
+#pl.hist(dataset.target, np.unique(dataset.target))
+#pl.show()
 
-# Split the dataset in training and test set:
-docs_train, docs_test, y_train, y_test = train_test_split(
-    dataset.data, dataset.target, test_fraction=0.5)
 
+# Transform data
+vectorizer = tx.CountVectorizer()
+vectors = vectorizer.fit_transform(dataset.data)
+print len(vectorizer.vocabulary_)
+print len(vectorizer.stop_words_)
+## Split the dataset in training and test set:
+docs_train, docs_test, y_train, y_test = cv.train_test_split(
+    vectors, dataset.target, test_size=0.5)
 
-# TASK: Build a vectorizer that splits strings into sequence of 1 to 3
-# of 3 consecutive chars (1-grams, 2-grams and 3-grams of characters)
-# with IDF weights disabled (normalized term frequencies only)
+# cross validation on the entire dataset
+clf = MultinomialNB(alpha=.1)
+score = cv.cross_val_score(clf, vectors, dataset.target, scoring='f1', cv=5)
 
 # TASK: Chain the vectorizer with a linear classifier into a Pipeline
 # instance. Its variable should be named `pipeline`.
+pipeline = Pipeline([
+    ('vec', vectorizer),
+    ('clf', MultinomialNB()),
+])
 
-# TASK: Fit the pipeline on the training set
+# Grid search
+parameters = {'vec__max_n':(1,2),
+              'clf__alpha': (1e-2,1e-3),
+              }
+gs_clf = gs.GridSearchCV(clf, parameters, n_jobs=1)
 
-# TASK: Predict the outcome on the testing set in a variable named y_predicted
 
-# Print the classification report
-print metrics.classification_report(y_test, y_predicted,
-                                    target_names=dataset.target_names)
 
-# Plot the confusion matrix
-cm = metrics.confusion_matrix(y_test, y_predicted)
-print cm
 
-#import pylab as pl
-#pl.matshow(cm, cmap=pl.cm.jet)
-#pl.show()
 
-# Predict the result on some short new sentences:
-sentences = [
-    u'This is a language detection test.',
-    u'Ceci est un test de d\xe9tection de la langue.',
-    u'Dies ist ein Test, um die Sprache zu erkennen.',
-]
-predicted = pipeline.predict(sentences)
 
-for s, p in zip(sentences, predicted):
-    print u'The language of "%s" is "%s"' % (s, dataset.target_names[p])

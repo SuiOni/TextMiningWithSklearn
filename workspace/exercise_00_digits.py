@@ -3,6 +3,7 @@ from sklearn.svm import SVC
 from sklearn.datasets import load_digits
 from sklearn.cross_validation import train_test_split
 from sklearn.cross_validation import cross_val_score
+from sklearn.metrics import classification_report
 
 digits = load_digits()
 n_samples, n_features = digits.data.shape
@@ -44,3 +45,6 @@ predicted = clf.predict(data_test)
 scores = cross_val_score(clf, digits.data, digits.target, cv=5)
 
 print "CV score: %0.3f +/- %0.3f" % (scores.mean(), scores.std() / 2)
+
+# add classification report
+print classification_report(label_test, predicted)
